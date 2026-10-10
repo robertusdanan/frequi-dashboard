@@ -72,7 +72,7 @@ export function MobileWorkspace() {
       case 'logs':
         return 'Bot Logs';
       case 'bot_control':
-        return 'Bot Console';
+        return 'Bot Control';
       default:
         return '';
     }
@@ -205,8 +205,8 @@ export function MobileWorkspace() {
                 >
                   <Cpu className="w-5 h-5 text-purple-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate">Console</div>
-                    <div className="text-[10px] text-slate-500 truncate">Start, stop, and reload configuration</div>
+                    <div className="text-xs font-bold truncate">Bot Control</div>
+                    <div className="text-[10px] text-slate-500 truncate">Start, stop, reload, dan kontrol strategi</div>
                   </div>
                 </button>
               </div>
