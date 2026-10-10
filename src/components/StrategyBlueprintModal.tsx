@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { X, BookOpen, ShieldAlert, Repeat2, Layers, Activity, Zap, TrendingDown, Clock, GitBranch, FlameKindling, Target, AlertTriangle, Info, Sliders } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { X, BookOpen, ShieldAlert, Repeat2, Layers, Activity, Zap, TrendingDown, Clock, GitBranch, FlameKindling, Target, AlertTriangle, Info, Sliders, Loader2, RefreshCw } from 'lucide-react';
+import { useBot } from '../context/BotContext';
 
 interface StrategyBlueprintModalProps {
   open: boolean;
@@ -9,6 +10,116 @@ interface StrategyBlueprintModalProps {
   botState?: Record<string, any>;
 }
 
+interface LiveStrategyData {
+  profitThresholds: { spot: number | null; futures: number | null };
+  stopThresholds: { spot: number | null; futures: number | null; doomSpot: number | null; doomFutures: number | null; rebuyCapSpot: number | null };
+  grind1Stakes: { spot: number[]; futures: number[] };
+  grind1SubThresholds: { spot: number[]; futures: number[] };
+  grind1Derisk1Stakes: { spot: number[]; futures: number[] };
+  rebuyTags: string[];
+  grindTags: string[];
+  scalpTags: string[];
+  grindingV1MaxStake: number | null;
+  grindingV2MaxStake: number | null;
+  grindingV2MaxGrindsAndBuybacks: number | null;
+  grindingV2DeriskLevel1Enabled: boolean | null;
+  longNormalTags: string[];
+  longPumpTags: string[];
+  longQuickTags: string[];
+  longHpTags: string[];
+  longRapidTags: string[];
+  longGrindTags: string[];
+  longBtcTags: string[];
+  longTcTags: string[];
+}
+
+function parseStrategySource(code: string): LiveStrategyData {
+  const out: LiveStrategyData = {
+    profitThresholds: { spot: null, futures: null },
+    stopThresholds: { spot: null, futures: null, doomSpot: null, doomFutures: null, rebuyCapSpot: null },
+    grind1Stakes: { spot: [], futures: [] },
+    grind1SubThresholds: { spot: [], futures: [] },
+    grind1Derisk1Stakes: { spot: [], futures: [] },
+    rebuyTags: [],
+    grindTags: [],
+    scalpTags: [],
+    grindingV1MaxStake: null,
+    grindingV2MaxStake: null,
+    grindingV2MaxGrindsAndBuybacks: null,
+    grindingV2DeriskLevel1Enabled: null,
+    longNormalTags: [],
+    longPumpTags: [],
+    longQuickTags: [],
+    longHpTags: [],
+    longRapidTags: [],
+    longGrindTags: [],
+    longBtcTags: [],
+    longTcTags: [],
+  };
+
+  const scalar = (key: string) => {
+    const m = code.match(new RegExp(`${key}\\s*=\\s*([\\-\\d.]+)`));
+    return m ? Number(m[1]) : null;
+  };
+  const list = (key: string): number[] => {
+    const m = code.match(new RegExp(`${key}\\s*=\\s*\\[([^\\]]+)\\]`));
+    if (!m) return [];
+    return m[1].split(',').map((s) => Number(s.trim())).filter((n) => !Number.isNaN(n));
+  };
+  const strings = (key: string): string[] => {
+    const m = code.match(new RegExp(`${key}\\s*=\\s*\\[([^\\]]+)\\]`));
+    if (!m) return [];
+    const items = m[1].match(/"([^"]+)"/g) || [];
+    return items.map((s) => s.replace(/"/g, ''));
+  };
+
+  out.profitThresholds.spot = scalar('profit_threshold_spot');
+  out.profitThresholds.futures = scalar('profit_threshold_futures');
+  out.stopThresholds.spot = scalar('stop_threshold_spot');
+  out.stopThresholds.futures = scalar('stop_threshold_futures');
+  out.stopThresholds.doomSpot = scalar('stop_threshold_doom_spot');
+  out.stopThresholds.doomFutures = scalar('stop_threshold_doom_futures');
+  out.stopThresholds.rebuyCapSpot = scalar('stop_threshold_spot_rebuy');
+
+  out.grind1Stakes.spot = list('grind_1_stakes_spot');
+  out.grind1Stakes.futures = list('grind_1_stakes_futures');
+  out.grind1SubThresholds.spot = list('grind_1_sub_thresholds_spot');
+  out.grind1SubThresholds.futures = list('grind_1_sub_thresholds_futures');
+  out.grind1Derisk1Stakes.spot = list('grind_1_derisk_1_stakes_spot');
+  out.grind1Derisk1Stakes.futures = list('grind_1_derisk_1_stakes_futures');
+
+  out.rebuyTags = strings('long_rebuy_mode_tags');
+  out.grindTags = strings('long_grind_mode_tags');
+  out.scalpTags = strings('long_scalp_mode_tags');
+
+  out.grindingV1MaxStake = scalar('grinding_v1_max_stake');
+  out.grindingV2MaxStake = scalar('grinding_v2_max_stake');
+  out.grindingV2MaxGrindsAndBuybacks = scalar('grinding_v2_max_grinds_and_buybacks');
+  const deriskL1 = code.match(/grinding_v2_derisk_level_1_enable\s*=\s*(True|False)/);
+  out.grindingV2DeriskLevel1Enabled = deriskL1 ? deriskL1[1] === 'True' : null;
+
+  out.longNormalTags = strings('long_normal_mode_tags');
+  out.longPumpTags = strings('long_pump_mode_tags');
+  out.longQuickTags = strings('long_quick_mode_tags');
+  out.longHpTags = strings('long_hp_mode_tags');
+  out.longRapidTags = strings('long_rapid_mode_tags');
+  out.longGrindTags = strings('long_grind_mode_tags');
+  out.longBtcTags = strings('long_btc_mode_tags');
+  out.longTcTags = strings('long_tc_mode_tags');
+
+  return out;
+}
+
+function formatRange(tags: string[]): string {
+  if (!tags || tags.length === 0) return '—';
+  if (tags.length === 1) return tags[0];
+  const nums = tags.map((t) => Number(t)).filter((n) => !Number.isNaN(n));
+  if (nums.length === tags.length) {
+    return `${Math.min(...nums)}–${Math.max(...nums)}`;
+  }
+  return tags.join(', ');
+}
+
 export function StrategyBlueprintModal({
   open,
   onClose,
@@ -16,6 +127,12 @@ export function StrategyBlueprintModal({
   strategyVersion = 'v18.0.124',
   botState = {},
 }: StrategyBlueprintModalProps) {
+  const { client, isReadOnly } = useBot();
+  const [liveData, setLiveData] = useState<LiveStrategyData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -29,7 +146,31 @@ export function StrategyBlueprintModal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  const refetch = async () => {
+    if (!client) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await client.getStrategySource(strategyName);
+      if (res && res.code) {
+        setLiveData(parseStrategySource(res.code));
+        setLastFetched(new Date());
+      } else {
+        setError('Gagal membaca source strategi dari Freqtrade API');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Gagal membaca source strategi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && client && !isReadOnly) {
+      refetch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, strategyName]);
 
   const dryRun = botState.dry_run ?? true;
   const maxTrades = botState.max_open_trades ?? 6;
@@ -43,8 +184,34 @@ export function StrategyBlueprintModal({
   const leverage = botState.futures_mode_leverage ?? 3.0;
   const leverageRebuy = botState.futures_mode_leverage_rebuy_mode ?? 3.0;
   const leverageGrind = botState.futures_mode_leverage_grind_mode ?? 3.0;
-  const freqVersion = botState.version || 'freqtrade';
   const startupCandles = botState.startup_candle_count ?? 800;
+
+  const profitFut = liveData?.profitThresholds?.futures ?? 0.018;
+  const stopFut = liveData?.stopThresholds?.futures ?? 0.10;
+  const stopDoomFut = liveData?.stopThresholds.doomFutures ?? 0.20;
+  const stopRebuy = liveData?.stopThresholds.rebuyCapSpot ?? 1.0;
+  const grindFutStakes = liveData?.grind1Stakes.futures ?? [];
+  const grindFutSubThr = liveData?.grind1SubThresholds.futures ?? [];
+
+  const longModeRows = useMemo(() => {
+    const rows: { tag: string; mode: string; desc: string }[] = [];
+    const push = (tags: string[], mode: string, desc: string) => {
+      if (tags && tags.length) rows.push({ tag: formatRange(tags), mode, desc });
+    };
+    push(liveData?.longNormalTags ?? [], 'normal', 'Setup standar, paling sering.');
+    push(liveData?.longPumpTags ?? [], 'pump', 'Mengikuti momentum naik tiba-tiba.');
+    push(liveData?.longQuickTags ?? [], 'quick', 'Entry cepat saat trend baru terbentuk.');
+    push(liveData?.rebuyTags ?? [], 'rebuy', 'Mode rebuy murni (5 step).');
+    push(liveData?.longHpTags ?? [], 'hp', 'High-profit mode, ekspektasi payoff besar.');
+    push(liveData?.longRapidTags ?? [], 'rapid', 'Entry cepat setelah flash crash.');
+    push(liveData?.longGrindTags ?? [], 'grind', 'Entry khusus grinding.');
+    push(liveData?.longBtcTags ?? [], 'btc', 'Mode khusus saat BTC sedang pumping.');
+    push(liveData?.longTcTags ?? [], 'tc', 'Top coins mode (koin likuiditas tinggi).');
+    push(liveData?.scalpTags ?? [], 'scalp', 'Scalping ketat, target kecil.');
+    return rows;
+  }, [liveData]);
+
+  if (!open) return null;
 
   return (
     <div
@@ -63,6 +230,7 @@ export function StrategyBlueprintModal({
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-emerald-400/80 font-bold mb-1.5">
                 <BookOpen className="w-3.5 h-3.5" />
                 <span>Strategy Blueprint</span>
+                {loading && <Loader2 className="w-3 h-3 animate-spin" />}
               </div>
               <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight truncate">
                 {strategyName}
@@ -84,7 +252,23 @@ export function StrategyBlueprintModal({
                   <Activity className="w-3 h-3" />
                   {dryRun ? 'Simulation' : 'Live'} · {tradingMode}
                 </span>
+                {lastFetched && !isReadOnly && (
+                  <button
+                    onClick={refetch}
+                    title={`Sinkron ulang (${lastFetched.toLocaleTimeString()})`}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-700/40 hover:bg-slate-700 text-slate-300 border border-slate-600/50 text-[10px] font-mono cursor-pointer"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    live · {lastFetched.toLocaleTimeString()}
+                  </button>
+                )}
               </div>
+              {error && (
+                <div className="mt-2 text-[11px] text-amber-300/90 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3 h-3" />
+                  <span>{error} — nilai di bawah menggunakan fallback statis.</span>
+                </div>
+              )}
             </div>
             <button
               onClick={onClose}
@@ -130,13 +314,21 @@ export function StrategyBlueprintModal({
                 active={grinding}
                 icon={<Repeat2 className="w-3.5 h-3.5" />}
                 title="Grinding"
-                desc="Membolehkan v1 dan v2 grinding. v2 mendukung 6 round + 3 level derisk dengan stake progresif."
+                desc={
+                  liveData?.grindingV1MaxStake
+                    ? `v1 max stake ${liveData.grindingV1MaxStake}x | v2 max stake ${liveData.grindingV2MaxStake}x, ${liveData.grindingV2MaxGrindsAndBuybacks ?? '?'} round maks`
+                    : 'Membolehkan v1 dan v2 grinding. v2 mendukung 6 round + 3 level derisk dengan stake progresif.'
+                }
               />
               <Feature
                 active={derisk}
                 icon={<ShieldAlert className="w-3.5 h-3.5" />}
                 title="Derisk"
-                desc="Saat floating minus membesar, bot menjual sebagian posisi untuk memotong kerugian."
+                desc={
+                  liveData?.grindingV2DeriskLevel1Enabled !== null && liveData?.grindingV2DeriskLevel1Enabled !== undefined
+                    ? `v2 derisk level 1 ${liveData.grindingV2DeriskLevel1Enabled ? 'aktif' : 'non-aktif'}. Saat floating minus membesar, bot menjual sebagian posisi untuk memotong kerugian.`
+                    : 'Saat floating minus membesar, bot menjual sebagian posisi untuk memotong kerugian.'
+                }
               />
             </div>
           </section>
@@ -147,23 +339,10 @@ export function StrategyBlueprintModal({
             <p className="text-slate-400 mb-2">
               Ada <b className="text-white">9 mode long</b> dan <b className="text-white">9 mode short</b>,
               masing-masing punya syarat indikator berbeda dan rentang market tertentu. Tag di belakang nama
-              mode adalah awalan untuk nomor urut sinyal.
+              mode adalah awalan untuk nomor urut sinyal — di bawah adalah rentang tag aktual yang terbaca
+              dari source strategi yang sedang berjalan.
             </p>
-            <ModeTable
-              side="Long"
-              rows={[
-                { tag: '1–13', mode: 'normal', desc: 'Setup standar, paling sering.' },
-                { tag: '21–26', mode: 'pump', desc: 'Mengikuti momentum naik tiba-tiba.' },
-                { tag: '41–53', mode: 'quick', desc: 'Entry cepat saat trend baru terbentuk.' },
-                { tag: '61–68', mode: 'rebuy', desc: 'Mode rebuy murni (5 step).' },
-                { tag: '81–82', mode: 'hp', desc: 'High-profit mode, ekspektasi payoff besar.' },
-                { tag: '101–110', mode: 'rapid', desc: 'Entry cepat setelah flash crash.' },
-                { tag: '120', mode: 'grind', desc: 'Entry khusus grinding.' },
-                { tag: '121', mode: 'btc', desc: 'Mode khusus saat BTC sedang pumping.' },
-                { tag: '141–145', mode: 'tc', desc: 'Top coins mode (koin likuiditas tinggi).' },
-                { tag: '161–173', mode: 'scalp', desc: 'Scalping ketat, target kecil.' },
-              ]}
-            />
+            <ModeTable side="Long" rows={longModeRows} />
           </section>
 
           {/* Rebuy protocol */}
@@ -178,7 +357,7 @@ export function StrategyBlueprintModal({
             </p>
             <ul className="mt-2 space-y-1 text-slate-300 text-[12.5px]">
               <li>• Syarat slot: butuh minimal <b className="text-white">2 slot kosong</b> agar rebuy mode aktif.</li>
-              <li>• Batas rugi rebuy: <b className="font-mono text-rose-300">-1.0</b> (100% dari entry pertama).</li>
+              <li>• Batas rugi rebuy: <b className="font-mono text-rose-300">-{stopRebuy.toFixed(2)}</b> (100% dari entry pertama).</li>
               <li>• Exit khusus rebuy: <b className="font-mono text-emerald-300">exit_long_rebuy_e_r</b> dan variasinya.</li>
             </ul>
           </section>
@@ -223,38 +402,51 @@ export function StrategyBlueprintModal({
             <p className="text-slate-300">
               Grinding v1 mendukung <b>6 sub-grind</b> dengan stake progresif dan target profit berbeda.
               Grinding v2 menambahkan lapisan derisk per round, stake lebih besar, dan toleransi rugi
-              lebih dalam.
+              lebih dalam. Nilai stakes & thresholds di bawah ini dibaca langsung dari source strategi yang
+              sedang berjalan (round 1).
             </p>
 
-            <h4 className="text-[12px] uppercase tracking-wider text-slate-300 font-bold mt-3 mb-1.5">Grinding v1 (stakes vs thresholds futures)</h4>
+            <h4 className="text-[12px] uppercase tracking-wider text-slate-300 font-bold mt-3 mb-1.5">
+              Grinding v1 — round 1 (futures) {liveData && grindFutStakes.length > 0 && <span className="text-emerald-400 normal-case">· live</span>}
+            </h4>
             <div className="overflow-x-auto rounded-lg border border-slate-700/50">
               <table className="w-full text-[11.5px] font-mono">
                 <thead className="bg-slate-800/60 text-slate-400">
                   <tr>
-                    <th className="px-2 py-1.5 text-left">Round</th>
-                    <th className="px-2 py-1.5 text-left">Stakes (% entry pertama)</th>
-                    <th className="px-2 py-1.5 text-left">Sub-thresholds</th>
-                    <th className="px-2 py-1.5 text-left">Profit target</th>
+                    <th className="px-2 py-1.5 text-left">Parameter</th>
+                    <th className="px-2 py-1.5 text-left">Nilai</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700/40">
-                  <tr><td className="px-2 py-1">grind_1</td><td className="px-2 py-1 text-cyan-300">0.20 / 0.22 / 0.24</td><td className="px-2 py-1">-0.12 / -0.16 / -0.20</td><td className="px-2 py-1 text-emerald-300">+1.8%</td></tr>
-                  <tr><td className="px-2 py-1">grind_2</td><td className="px-2 py-1 text-cyan-300">0.20 / 0.22 / 0.24</td><td className="px-2 py-1">-0.12 / -0.16 / -0.20</td><td className="px-2 py-1 text-emerald-300">+1.8%</td></tr>
-                  <tr><td className="px-2 py-1">grind_3</td><td className="px-2 py-1 text-cyan-300">0.20 / 0.22 / 0.24</td><td className="px-2 py-1">-0.12 / -0.16 / -0.20</td><td className="px-2 py-1 text-emerald-300">+1.8%</td></tr>
-                  <tr><td className="px-2 py-1">grind_4</td><td className="px-2 py-1 text-cyan-300">0.20 / 0.22 / 0.24</td><td className="px-2 py-1">-0.12 / -0.16 / -0.20</td><td className="px-2 py-1 text-emerald-300">+1.8%</td></tr>
-                  <tr><td className="px-2 py-1">grind_5</td><td className="px-2 py-1 text-cyan-300">0.20 / 0.22 / 0.24</td><td className="px-2 py-1">-0.12 / -0.16 / -0.20</td><td className="px-2 py-1 text-emerald-300">+4.8%</td></tr>
-                  <tr><td className="px-2 py-1">grind_6</td><td className="px-2 py-1 text-cyan-300">0.10 → 0.18 (9 step)</td><td className="px-2 py-1">-0.03 → -0.22 (9 step)</td><td className="px-2 py-1 text-emerald-300">+1.8%</td></tr>
+                  <tr>
+                    <td className="px-2 py-1">Stakes</td>
+                    <td className="px-2 py-1 text-cyan-300">
+                      {grindFutStakes.length > 0 ? `[${grindFutStakes.join(', ')}]` : '—'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-1">Sub-thresholds</td>
+                    <td className="px-2 py-1">
+                      {grindFutSubThr.length > 0 ? `[${grindFutSubThr.join(', ')}]` : '—'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-1">Profit target</td>
+                    <td className="px-2 py-1 text-emerald-300">+{((profitFut ?? 0) * 100).toFixed(2)}%</td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-1">Max stake v1</td>
+                    <td className="px-2 py-1">{liveData?.grindingV1MaxStake ?? '1.0'}x entry pertama</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
             <h4 className="text-[12px] uppercase tracking-wider text-slate-300 font-bold mt-3 mb-1.5">Grinding v2</h4>
             <ul className="space-y-1 text-slate-300 text-[12.5px]">
-              <li>• 3 round grinding (grind_1/2/3) dengan stake{' '}
-                <b className="font-mono text-orange-300">[0.20/0.22/0.24/0.26/0.28]</b> dan threshold bertingkat.</li>
               <li>• Derisk per round aktif di <b className="font-mono text-rose-300">-0.26</b>.</li>
-              <li>• Batas atas: maksimal <b className="text-white">20 open grinds+buybacks</b> per posisi.</li>
-              <li>• Total stake v2 dibatasi <b className="text-white">1.0x</b> dari entry pertama.</li>
+              <li>• Batas atas: maksimal <b className="text-white">{liveData?.grindingV2MaxGrindsAndBuybacks ?? 20} open grinds+buybacks</b> per posisi.</li>
+              <li>• Total stake v2 dibatasi <b className="text-white">{liveData?.grindingV2MaxStake ?? '1.0'}x</b> dari entry pertama.</li>
             </ul>
           </section>
 
@@ -268,19 +460,20 @@ export function StrategyBlueprintModal({
                     <th className="px-2 py-1.5 text-left">Mode</th>
                     <th className="px-2 py-1.5 text-left">Spot</th>
                     <th className="px-2 py-1.5 text-left">Futures</th>
-                    <th className="px-2 py-1.5 text-left">System v3.1</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700/40">
-                  <tr><td className="px-2 py-1">Normal stop</td><td className="px-2 py-1">-0.10</td><td className="px-2 py-1">-0.10</td><td className="px-2 py-1 text-slate-500">-</td></tr>
-                  <tr><td className="px-2 py-1">Doom stop</td><td className="px-2 py-1">-0.20</td><td className="px-2 py-1">-0.20</td><td className="px-2 py-1 text-amber-300">-0.70 (futures)</td></tr>
-                  <tr><td className="px-2 py-1">Rapid stop</td><td className="px-2 py-1">-0.20</td><td className="px-2 py-1">-0.20</td><td className="px-2 py-1 text-amber-300">-0.70 (futures)</td></tr>
-                  <tr><td className="px-2 py-1">Scalp stop</td><td className="px-2 py-1">-0.20</td><td className="px-2 py-1">-0.20</td><td className="px-2 py-1 text-amber-300">-0.70 (futures)</td></tr>
-                  <tr><td className="px-2 py-1">Rebuy cap</td><td className="px-2 py-1">-1.00</td><td className="px-2 py-1">-1.00</td><td className="px-2 py-1 text-slate-500">-</td></tr>
-                  <tr><td className="px-2 py-1">Grind hard stop</td><td className="px-2 py-1">-0.12</td><td className="px-2 py-1">-0.12</td><td className="px-2 py-1 text-slate-500">-</td></tr>
+                  <tr><td className="px-2 py-1">Normal stop</td><td className="px-2 py-1">-{stopFut.toFixed(2)}</td><td className="px-2 py-1">-{stopFut.toFixed(2)}</td></tr>
+                  <tr><td className="px-2 py-1">Doom stop</td><td className="px-2 py-1">-{stopDoomFut.toFixed(2)}</td><td className="px-2 py-1">-{stopDoomFut.toFixed(2)}</td></tr>
+                  <tr><td className="px-2 py-1">Rapid stop</td><td className="px-2 py-1">-{stopDoomFut.toFixed(2)}</td><td className="px-2 py-1">-{stopDoomFut.toFixed(2)}</td></tr>
+                  <tr><td className="px-2 py-1">Scalp stop</td><td className="px-2 py-1">-{stopDoomFut.toFixed(2)}</td><td className="px-2 py-1">-{stopDoomFut.toFixed(2)}</td></tr>
+                  <tr><td className="px-2 py-1">Rebuy cap</td><td className="px-2 py-1">-{stopRebuy.toFixed(2)}</td><td className="px-2 py-1">-{stopRebuy.toFixed(2)}</td></tr>
                 </tbody>
               </table>
             </div>
+            <p className="text-slate-400 mt-2 text-[11.5px]">
+              {liveData ? '✓ Nilai di atas dibaca dari source strategi aktif.' : '○ Nilai default yang ditampilkan sampai source strategi berhasil dibaca.'}
+            </p>
           </section>
 
           {/* Exit layers */}
@@ -339,6 +532,7 @@ export function StrategyBlueprintModal({
               <li>• <b className="text-white">Drawdown adalah fitur.</b> Strategi ini merancang rugi sementara dalam untuk menurunkan harga rata-rata. Jangan panik di hari rugi.</li>
               <li>• <b className="text-white">Periksa trade history.</b> Buka dropdown order di chart candle untuk lihat tag grind_4_entry, derisk_level_1, exit_long_rebuy_e_r — semua aksi bot tercatat di sana.</li>
               <li>• <b className="text-white">Auto-update aktif.</b> Strategi diperbarui berkala oleh author. Versi ini (<b className="text-white">{strategyVersion}</b>) sudah ter-apply dan bot sudah melakukan reload_config — tidak perlu intervensi manual.</li>
+              <li>• <b className="text-white">Blueprint ini auto-sync.</b> Saat frekuensi sinyal nfi-updater merilis versi baru, semua angka stakes, thresholds, dan tag di modal ini ikut berubah otomatis (fetch dari Freqtrade API tiap kali dibuka).</li>
               <li>• <b className="text-white">Restart hanya bila perlu.</b> Perubahan konfigurasi via UI ter-reload tanpa restart container.</li>
             </ul>
           </section>
@@ -347,9 +541,9 @@ export function StrategyBlueprintModal({
           <section className="border-t border-slate-700/40 pt-4 text-[11px] text-slate-500 leading-relaxed">
             Blueprint ini adalah ringkasan parameter runtime dari strategi{' '}
             <b className="text-slate-400">{strategyName} {strategyVersion}</b> yang sedang aktif di bot.
-            Nilai-nilai turunan (stakes, thresholds, profit target) diambil langsung dari kode strategi
-            yang sedang dieksekusi oleh Freqtrade {freqVersion}. Saat upstream merilis versi baru,
-            parameter akan berubah otomatis tanpa intervensi manual.
+            Nilai yang dapat di-sinkron otomatis (stakes, thresholds, profit target, mode tags) dibaca dari
+            source code strategi melalui endpoint <b className="text-slate-400">GET /api/v1/strategy/&lt;name&gt;</b>{' '}
+            tiap kali modal dibuka. Saat upstream merilis versi baru, parameter ini berubah otomatis tanpa intervensi manual.
           </section>
         </div>
       </div>
