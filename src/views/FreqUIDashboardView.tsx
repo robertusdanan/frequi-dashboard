@@ -15,6 +15,8 @@ import {
   Coins,
   ExternalLink,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { SignalBadge } from '../components/SignalBadge';
 import { buildEncryptedShareUrl } from '../utils/shareCrypto';
@@ -40,6 +42,8 @@ export function FreqUIDashboardView() {
     setCustomRate,
     fetchLiveRates,
     formatCurrency,
+    hideBalances,
+    toggleHideBalances,
     isReadOnly,
     refreshData,
     setMobileTab,
@@ -223,7 +227,18 @@ export function FreqUIDashboardView() {
         >
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-0.5 gap-1">
             <span className="font-medium truncate">Account balance</span>
-            <Layers className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={toggleHideBalances}
+                className="p-1 rounded-md text-slate-400 hover:text-purple-500 hover:bg-purple-500/10 transition-colors cursor-pointer"
+                title={hideBalances ? 'Show balances and monetary values' : 'Hide balances and monetary values'}
+                aria-label={hideBalances ? 'Show balances and monetary values' : 'Hide balances and monetary values'}
+              >
+                {hideBalances ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+              <Layers className="w-3.5 h-3.5 text-purple-500" />
+            </div>
           </div>
           <div className="text-lg sm:text-2xl font-bold font-mono text-purple-600 dark:text-purple-400 tracking-tight whitespace-nowrap truncate">
             {formatCurrency(botState.balance)}

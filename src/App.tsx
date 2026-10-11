@@ -22,6 +22,7 @@ import { EquityCurveView } from './views/EquityCurveView';
 import { LoginGateView } from './views/LoginGateView';
 import { BotSelectView } from './views/BotSelectView';
 import { isNfiStrategy } from './utils/nfiSignals';
+import { LocaleProvider, useT } from './i18n/LocaleContext';
 
 const translateMenuLabel = (label: string): string => {
   if (!label) return label;
@@ -61,6 +62,7 @@ const localizeTrellisMenu = (entries: any[]): any[] => {
 
 function DashboardWorkspace() {
   const { theme, botState } = useBot();
+  const t = useT();
 
   return (
     <div
@@ -80,7 +82,7 @@ function DashboardWorkspace() {
           {/* Register all View Types */}
           <ViewType
             id="frequi_dashboard"
-            title="FreqUI Main Dashboard"
+            title={t('view.frequi_dashboard')}
             placement="stage"
             singleton
           >
@@ -89,7 +91,7 @@ function DashboardWorkspace() {
 
           <ViewType
             id="chart"
-            title={(v) => (v.params?.pair ? `Candles - ${v.params.pair}` : 'Candle Chart')}
+            title={(v) => (v.params?.pair ? `${t('view.candle_chart')} - ${v.params.pair}` : t('view.candle_chart'))}
             singleton
           >
             <CandleChartView />
@@ -105,7 +107,7 @@ function DashboardWorkspace() {
 
           <ViewType
             id="active_trades"
-            title="Active Positions"
+            title={t('view.active_trades')}
             singleton
           >
             <ActiveTradesView />
@@ -113,7 +115,7 @@ function DashboardWorkspace() {
 
           <ViewType
             id="bot_control"
-            title="Endpoint & Bot Control"
+            title={t('view.bot_control')}
             singleton
           >
             <BotControlView />
@@ -121,7 +123,7 @@ function DashboardWorkspace() {
 
           <ViewType
             id="closed_trades"
-            title="Trade History"
+            title={t('view.closed_trades')}
             singleton
           >
             <ClosedTradesView />
@@ -129,7 +131,7 @@ function DashboardWorkspace() {
 
           <ViewType
             id="logs"
-            title="Bot Logs"
+            title={t('view.bot_logs')}
             singleton
           >
             <BotLogsView />
@@ -137,7 +139,7 @@ function DashboardWorkspace() {
 
           <ViewType
             id="equity_curve"
-            title="Equity Curve"
+            title={t('view.equity_curve')}
             singleton
           >
             <EquityCurveView />
@@ -219,9 +221,11 @@ function AppRoot() {
 
 export function App() {
   return (
-    <BotProvider>
-      <AppRoot />
-    </BotProvider>
+    <LocaleProvider>
+      <BotProvider>
+        <AppRoot />
+      </BotProvider>
+    </LocaleProvider>
   );
 }
 
