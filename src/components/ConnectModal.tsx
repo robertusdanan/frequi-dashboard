@@ -3,6 +3,7 @@ import { useBot } from '../context/BotContext';
 import { X, Server, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { normalizeApiUrl } from '../api/client';
 import { PRESET_BOTS } from '../config/botPresets';
+import { useT } from '../i18n/LocaleContext';
 
 interface ConnectModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ConnectModalProps {
 
 export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
   const { addProfile, theme } = useBot();
+  const t = useT();
   const [selectedPreset, setSelectedPreset] = useState('futures');
   const [name, setName] = useState('FuturesBinance-Bot');
   const [apiUrl, setApiUrl] = useState('/ft-api');
@@ -74,7 +76,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
         >
           <div className="flex items-center gap-2">
             <Server className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-sm font-bold">Connect new Freqtrade bot</h2>
+            <h2 className="text-sm font-bold">{t('connect.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -96,7 +98,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
 
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-              Bot Display Name
+              {t('connect.bot_name')}
             </label>
             <select
               value={selectedPreset}
@@ -117,7 +119,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Example: Backup strategy node #2"
+                placeholder={t('login.custom_name')}
                 className={`mt-2 w-full border rounded-xl px-3 py-2 font-medium focus:outline-none focus:border-emerald-500 transition-colors ${
                   isDark ? 'bg-[#1a233a] border-slate-700 text-slate-100' : 'bg-slate-50 border-slate-300 text-slate-900'
                 }`}
@@ -129,7 +131,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                API address (Base URL)
+                {t('connect.api_address')}
               </label>
               <div className="flex gap-1">
                 <button
@@ -141,14 +143,14 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
                   }}
                   className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded text-[9px] font-mono cursor-pointer"
                 >
-                  /ft-api (Futures default)
+                  {t('connect.futures_default')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setApiUrl('')}
                   className="px-1.5 py-0.5 bg-slate-500/10 text-slate-500 border border-slate-500/30 rounded text-[9px] font-mono cursor-pointer"
                 >
-                  Clear
+                  {t('connect.clear')}
                 </button>
               </div>
             </div>
@@ -167,7 +169,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                API username
+                {t('connect.api_username')}
               </label>
               <input
                 type="text"
@@ -182,7 +184,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                API password
+                {t('connect.api_password')}
               </label>
               <input
                 type="password"
@@ -205,7 +207,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
                 isDark ? 'border-slate-700 hover:bg-slate-800' : 'border-slate-300 hover:bg-slate-100'
               }`}
             >
-              Cancel
+              {t('connect.cancel')}
             </button>
             <button
               type="submit"
@@ -213,7 +215,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
               className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-60"
             >
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-              <span>Verify and connect</span>
+              <span>{t('connect.verify')}</span>
             </button>
           </div>
         </form>
