@@ -25,9 +25,11 @@ import {
 } from 'lucide-react';
 import { isNfiStrategy } from '../utils/nfiSignals';
 import { ConnectModal } from './ConnectModal';
+import { useT } from '../i18n/LocaleContext';
 
 export function MobileWorkspace() {
   const { theme, mobileTab, setMobileTab, activeTrades, botState, setIsSelectingBot } = useBot();
+  const t = useT();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -66,13 +68,13 @@ export function MobileWorkspace() {
   const getSecondaryTitle = () => {
     switch (mobileTab) {
       case 'equity_curve':
-        return 'Equity Curve';
+        return t('mobile.equity');
       case 'signals':
-        return isNfiStrategy(botState.strategy) ? 'NFI Strategy Signal Rankings' : 'Strategy signal performance';
+        return isNfiStrategy(botState.strategy) ? t('mobile.signals') : t('mobile.signals');
       case 'logs':
-        return 'Bot Logs';
+        return t('mobile.logs');
       case 'bot_control':
-        return 'Bot Control';
+        return t('mobile.control');
       default:
         return '';
     }
@@ -102,7 +104,7 @@ export function MobileWorkspace() {
             className="flex items-center gap-1 text-emerald-500 hover:text-emerald-400 cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Back to feature list</span>
+            <span>{t('mobile.back')}</span>
           </button>
           <span className="text-slate-400 font-medium">{getSecondaryTitle()}</span>
         </div>
@@ -126,7 +128,7 @@ export function MobileWorkspace() {
             >
               <div className="w-10 h-1 bg-slate-400/30 rounded-full mx-auto mb-3" />
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
-                More apps and analysis
+                {t('mobile.more')}
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
@@ -145,8 +147,8 @@ export function MobileWorkspace() {
                 >
                   <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate">Equity curve</div>
-                    <div className="text-[10px] text-slate-500 truncate">Compound returns and drawdown</div>
+                    <div className="text-xs font-bold truncate">{t('mobile.equity')}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{t('mobile.equity_desc')}</div>
                   </div>
                 </button>
 
@@ -165,8 +167,8 @@ export function MobileWorkspace() {
                 >
                   <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate">Strategy signal rankings</div>
-                    <div className="text-[10px] text-slate-500 truncate">Win rate by entry tag</div>
+                    <div className="text-xs font-bold truncate">{t('mobile.signals')}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{t('mobile.signals_desc')}</div>
                   </div>
                 </button>
 
@@ -185,8 +187,8 @@ export function MobileWorkspace() {
                 >
                   <Terminal className="w-5 h-5 text-cyan-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate">Bot logs</div>
-                    <div className="text-[10px] text-slate-500 truncate">Live execution and alerts</div>
+                    <div className="text-xs font-bold truncate">{t('mobile.logs')}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{t('mobile.logs_desc')}</div>
                   </div>
                 </button>
 
@@ -205,8 +207,8 @@ export function MobileWorkspace() {
                 >
                   <Cpu className="w-5 h-5 text-purple-500 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate">Bot Control</div>
-                    <div className="text-[10px] text-slate-500 truncate">Start, stop, reload, dan kontrol strategi</div>
+                    <div className="text-xs font-bold truncate">{t('mobile.control')}</div>
+                    <div className="text-[10px] text-slate-500 truncate">{t('mobile.control_desc')}</div>
                   </div>
                 </button>
               </div>
@@ -221,7 +223,7 @@ export function MobileWorkspace() {
                   className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Connect new bot</span>
+                  <span>{t('mobile.connect')}</span>
                 </button>
 
                 <button
@@ -236,7 +238,7 @@ export function MobileWorkspace() {
                   }`}
                 >
                   <Server className="w-4 h-4 text-cyan-500" />
-                  <span>Node list</span>
+                  <span>{t('mobile.nodes')}</span>
                 </button>
               </div>
 
@@ -277,7 +279,7 @@ export function MobileWorkspace() {
           }`}
         >
           <BarChart3 className="w-5 h-5 shrink-0" />
-          <span>Dashboard</span>
+          <span>{t('mobile.dashboard')}</span>
         </button>
 
         {/* Tab 2: Candles */}
@@ -293,7 +295,7 @@ export function MobileWorkspace() {
           }`}
         >
           <CandlestickChart className="w-5 h-5 shrink-0" />
-          <span>Candles</span>
+          <span>{t('mobile.candles')}</span>
         </button>
 
         {/* Tab 3: Positions */}
@@ -316,7 +318,7 @@ export function MobileWorkspace() {
               </span>
             )}
           </div>
-          <span>Positions</span>
+          <span>{t('mobile.positions')}</span>
         </button>
 
         {/* Tab 4: Close */}
@@ -332,7 +334,7 @@ export function MobileWorkspace() {
           }`}
         >
           <History className="w-5 h-5 shrink-0" />
-          <span>Close</span>
+          <span>{t('mobile.closed')}</span>
         </button>
 
         {/* Tab 5: More */}
@@ -345,7 +347,7 @@ export function MobileWorkspace() {
           }`}
         >
           <MoreHorizontal className="w-5 h-5 shrink-0" />
-          <span>More</span>
+          <span>{t('mobile.more_short')}</span>
         </button>
       </nav>
     </div>

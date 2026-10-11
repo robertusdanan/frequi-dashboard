@@ -3,6 +3,7 @@ import { useBot } from '../context/BotContext';
 import { Server, ShieldCheck, AlertCircle, ArrowRight, Sun, Moon, Loader2 } from 'lucide-react';
 import { normalizeApiUrl } from '../api/client';
 import { PRESET_BOTS } from '../config/botPresets';
+import { useT } from '../i18n/LocaleContext';
 
 export function LoginGateView() {
   const { addProfile, theme, setTheme, lastError } = useBot();
@@ -15,6 +16,7 @@ export function LoginGateView() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isDark = theme === 'dark';
+  const t = useT();
 
   const handlePresetChange = (presetId: string) => {
     setSelectedPreset(presetId);
@@ -87,10 +89,10 @@ export function LoginGateView() {
               ? 'border-slate-700 bg-[#1a233a] text-amber-400 hover:bg-[#222e4c]'
               : 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200'
           }`}
-          title="Switch light / dark theme"
+          title={isDark ? t('login.theme_light') : t('login.theme_dark')}
         >
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          <span className="hidden sm:inline font-mono">{isDark ? 'Light mode' : 'Dark mode'}</span>
+          <span className="hidden sm:inline font-mono">{isDark ? t('login.theme_light') : t('login.theme_dark')}</span>
         </button>
       </header>
 
