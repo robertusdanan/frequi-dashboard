@@ -98,15 +98,15 @@ export function HeaderBar() {
   return (
     <>
       <header
-        className={`pt-[env(safe-area-inset-top,0px)] min-h-[calc(2.75rem+env(safe-area-inset-top,0px))] border-b px-3 flex items-center justify-between select-none z-20 shrink-0 transition-colors ${
+        className={`pt-[env(safe-area-inset-top,0px)] min-h-[calc(2.75rem+env(safe-area-inset-top,0px))] border-b px-3 flex flex-wrap items-center justify-between gap-y-1 select-none z-20 shrink-0 transition-colors ${
           isDark
             ? 'bg-[#0f1626] border-slate-800 text-slate-100'
             : 'bg-white border-slate-200/90 text-slate-800 shadow-xs'
         }`}
       >
         {/* Left Section: Brand & Multi-Bot Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center font-bold text-xs text-white shadow-xs">
               F
             </div>
@@ -288,7 +288,7 @@ export function HeaderBar() {
         </div>
 
         {/* Right Section: Actions & Utilities */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {/* Manual Refresh Button & Auto-Refresh 6s Countdown */}
           <button
             onClick={handleManualRefresh}
@@ -301,13 +301,14 @@ export function HeaderBar() {
             title={`Click Sync data now. Auto-refreshes every 6 seconds (next refresh in ${refreshCountdown} seconds)`}
           >
             <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
-            <span className="font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 min-w-[15px] text-center">
+            <span className="hidden sm:inline font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 min-w-[15px] text-center">
               {refreshing ? '···' : `${refreshCountdown}s`}
             </span>
           </button>
 
           {/* Language Toggle (EN / 中文) */}
           <button
+            type="button"
             onClick={toggleLocale}
             className={`px-2 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors cursor-pointer font-medium ${
               isDark
