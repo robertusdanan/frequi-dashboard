@@ -9,6 +9,7 @@ import {
   type ISeriesApi,
 } from 'lightweight-charts';
 import { useBot } from '../context/BotContext';
+import { useT } from '../i18n/LocaleContext';
 import { useOptionalView } from '@danfessler/trellis-react';
 import {
   CandlestickChart,
@@ -146,6 +147,7 @@ function findTradesForCandle(
 
 export function CandleChartView() {
   const { client, botState, selectedPair, setSelectedPair, activeTrades, closedTrades, theme, formatCurrency } = useBot();
+  const t = useT();
   const view = useOptionalView();
   const viewPair = (view?.params as Record<string, any> | undefined)?.pair;
 
@@ -759,7 +761,7 @@ export function CandleChartView() {
                       ? 'text-slate-400 hover:text-slate-200 hover:bg-[#1a233a]'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
                   }`}
-                  title={isStrategyTf ? 'Native strategy timeframe' : `Market timeframe ${tf}`}
+                  title={isStrategyTf ? t('candle.native_timeframe') : `${t('candle.market_timeframe')} ${tf}`}
                 >
                   <span>{tf}</span>
                   {isStrategyTf && <span className="text-[9px] opacity-75">Strategy</span>}
@@ -779,14 +781,14 @@ export function CandleChartView() {
                 ? 'border-slate-700 bg-[#1a233a] text-slate-300 hover:text-slate-100 hover:bg-[#202b46]'
                 : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
             }`}
-            title="Load earlier historical candles"
+            title={t('candle.load_older_title')}
           >
             {loadingOlder ? (
               <Loader2 className="w-3 h-3 animate-spin text-emerald-500" />
             ) : (
               <History className="w-3 h-3" />
             )}
-            <span>Load earlier history ({candles.length})</span>
+            <span>{t('candle.load_older_btn')} ({candles.length})</span>
           </button>
 
           {/* Trade Markers Toggle Button */}
@@ -799,10 +801,10 @@ export function CandleChartView() {
                 ? 'bg-[#1a233a] text-slate-400 border-slate-700'
                 : 'bg-slate-100 text-slate-600 border-slate-300'
             }`}
-            title="Show entry and exit markers on the chart"
+            title={t('candle.markers_title')}
           >
             <Bookmark className="w-3 h-3" />
-            <span>Entry/exit markers: {showMarkers ? 'Show' : 'Hide'} ({tradeMarkers.length})</span>
+            <span>{t('candle.markers_label')}: {showMarkers ? t('candle.show') : t('candle.hide')} ({tradeMarkers.length})</span>
           </button>
 
           {/* Pair Trades List Dropdown */}
@@ -816,9 +818,9 @@ export function CandleChartView() {
                   ? 'bg-[#1a233a] text-slate-300 border-slate-700 hover:bg-[#202b46]'
                   : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
               }`}
-              title="View open and closed trades for this pair"
+              title={t('candle.trade_history_title')}
             >
-              <span>Trade history ({pairTrades.length})</span>
+              <span>{t('candle.trade_history_btn')} ({pairTrades.length})</span>
               <ChevronDown className="w-3 h-3" />
             </button>
 
@@ -831,7 +833,7 @@ export function CandleChartView() {
               >
                 <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-700/50">
                   <span className="font-bold text-[11px] text-slate-400 uppercase tracking-wider">
-                    {selectedPair} Trade history ({pairTrades.length})
+                    {selectedPair} {t('candle.trade_history_btn')} ({pairTrades.length})
                   </span>
                   <button
                     onClick={() => setShowTradeDropdown(false)}
@@ -843,7 +845,7 @@ export function CandleChartView() {
 
                 {pairTrades.length === 0 ? (
                   <div className="py-4 text-center text-slate-500 text-xs">
-                    No open or closed trades for this pair
+                    {t('candle.no_pair_trades')}
                   </div>
                 ) : (
                   <div className="space-y-2">

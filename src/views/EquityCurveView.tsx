@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useBot } from '../context/BotContext';
+import { useT } from '../i18n/LocaleContext';
 import {
   TrendingUp,
   DollarSign,
@@ -27,6 +28,7 @@ export function EquityCurveView() {
   } = useBot();
 
   const isDark = theme === 'dark';
+  const t = useT();
   const [viewMode, setViewMode] = useState<'balance' | 'pnl' | 'pct'>('balance');
   const [showConfig, setShowConfig] = useState(false);
   const [tempCapital, setTempCapital] = useState(String(initialCapital));
@@ -122,14 +124,14 @@ export function EquityCurveView() {
           }`}
         >
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-            <span className="font-medium">Initial capital</span>
+            <span className="font-medium">{t('equity.initial_capital')}</span>
             <button
               onClick={() => {
                 setTempCapital(String(initialCapital));
                 setShowConfig(!showConfig);
               }}
               className="p-1 rounded text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer"
-              title="Adjust initial capital baseline"
+              title={t('equity.adjust_baseline')}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
             </button>
@@ -139,15 +141,15 @@ export function EquityCurveView() {
           </div>
           <div className="text-[11px] text-slate-400 mt-1 flex items-center justify-between">
             <span className="truncate">
-              {isManualCapital ? 'Manual baseline' : 'Auto / default 2000'}
+              {isManualCapital ? t('equity.manual_baseline') : t('equity.auto_default')}
             </span>
             {isManualCapital && (
               <button
                 onClick={() => resetInitialCapitalToAuto()}
                 className="text-[10px] text-cyan-500 hover:underline cursor-pointer shrink-0 ml-1"
-                title="Restore automatic calculation (default 2000 USDT)"
+                title={t('equity.restore_auto_tooltip')}
               >
-                Restore automatic
+                {t('equity.restore')}
               </button>
             )}
           </div>
@@ -160,16 +162,16 @@ export function EquityCurveView() {
           }`}
         >
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-            <span className="font-medium">Current total equity</span>
+            <span className="font-medium">{t('equity.current_total')}</span>
             <Layers className="w-3.5 h-3.5 text-purple-500" />
           </div>
           <div className="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 truncate">
             {formatCurrency(currentEquity)}
           </div>
           <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-between">
-            <span>Cash: {formatCurrency(botState.balance)}</span>
+            <span>{t('equity.cash')}: {formatCurrency(botState.balance)}</span>
             <span className={totalUnrealized >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
-              Unrealized P&L: {formatCurrency(totalUnrealized, { showSign: true })}
+              {t('overview.unrealized_pnl')}: {formatCurrency(totalUnrealized, { showSign: true })}
             </span>
           </div>
         </div>
@@ -181,7 +183,7 @@ export function EquityCurveView() {
           }`}
         >
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-            <span className="font-medium">Cumulative net profit</span>
+            <span className="font-medium">{t('equity.cumulative_profit')}</span>
             <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
           </div>
           <div
@@ -208,19 +210,19 @@ export function EquityCurveView() {
           }`}
         >
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-            <span className="font-medium">Win rate / Max drawdown</span>
+            <span className="font-medium">{t('equity.win_drawdown')}</span>
             <ShieldAlert className="w-3.5 h-3.5 text-blue-500" />
           </div>
           <div className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 truncate">
             {winRate}%{' '}
             <span className="text-xs font-normal text-slate-400">
-              ({profitSummary?.closed_trade_count || 0} trades)
+              ({profitSummary?.closed_trade_count || 0} {t('ui.trades')})
             </span>
           </div>
           <div className="text-[11px] text-slate-500 mt-1 flex items-center justify-between">
-            <span>Wins: {profitSummary?.winning_trades || 0} / Losses: {profitSummary?.losing_trades || 0}</span>
+            <span>{t('equity.wins')}: {profitSummary?.winning_trades || 0} / {t('equity.losses')}: {profitSummary?.losing_trades || 0}</span>
             <span className="text-rose-500 font-mono">
-              Drawdown: {profitSummary?.max_drawdown_pct ? `${profitSummary.max_drawdown_pct.toFixed(2)}%` : '< 2.5%'}
+              {t('equity.drawdown')}: {profitSummary?.max_drawdown_pct ? `${profitSummary.max_drawdown_pct.toFixed(2)}%` : '< 2.5%'}
             </span>
           </div>
         </div>
@@ -246,7 +248,7 @@ export function EquityCurveView() {
             />
             <span className="text-slate-400 font-mono">{botState.stake_currency || 'USDT'}</span>
             <span className="text-[11px] text-slate-400 ml-1">
-              (Automatically derived, default 2000 USDT)
+              ({t('equity.auto_default')})
             </span>
           </div>
           <div className="flex gap-2">
@@ -258,21 +260,21 @@ export function EquityCurveView() {
                 }}
                 className="px-2.5 py-1 rounded text-cyan-500 hover:text-cyan-400 cursor-pointer"
               >
-                Restore automatic calculation
+                {t('equity.restore_auto_btn')}
               </button>
             )}
             <button
               onClick={() => setShowConfig(false)}
               className="px-2.5 py-1 rounded text-slate-400 hover:text-slate-200 cursor-pointer"
             >
-              Cancel
+              {t('connect.cancel')}
             </button>
             <button
               onClick={handleSaveCapital}
               className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold flex items-center gap-1 cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" />
-              <span>Save</span>
+              <span>{t('equity.save')}</span>
             </button>
           </div>
         </div>
@@ -288,7 +290,7 @@ export function EquityCurveView() {
         <div className="flex items-center justify-between gap-2 mb-2 shrink-0">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-emerald-500" />
-            <span className="font-bold text-sm">Account equity curve (Equity & PnL Curve)</span>
+            <span className="font-bold text-sm">{t('equity.title')}</span>
           </div>
 
           <div
@@ -304,7 +306,7 @@ export function EquityCurveView() {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Total equity
+              {t('equity.total')}
             </button>
             <button
               onClick={() => setViewMode('pnl')}
@@ -314,7 +316,7 @@ export function EquityCurveView() {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Cumulative profit
+              {t('equity.profit')}
             </button>
             <button
               onClick={() => setViewMode('pct')}
@@ -324,7 +326,7 @@ export function EquityCurveView() {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Return %
+              {t('equity.return')}
             </button>
           </div>
         </div>
@@ -346,15 +348,15 @@ export function EquityCurveView() {
               }}
             >
               <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-1 mb-1.5 text-[11px]">
-                <span className="font-sans font-medium text-slate-400">📅 Data point</span>
+                <span className="font-sans font-medium text-slate-400">📅 {t('equity.data_point')}</span>
                 <span className="font-bold text-slate-200">{coords[hoveredIdx].point.date}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                <div className="text-slate-400">Total equity:</div>
+                <div className="text-slate-400">{t('equity.total')}:</div>
                 <div className="font-bold text-right text-purple-400">
                   {formatCurrency(coords[hoveredIdx].point.value)}
                 </div>
-                <div className="text-slate-400">Cumulative profit:</div>
+                <div className="text-slate-400">{t('equity.profit')}:</div>
                 <div
                   className={`font-bold text-right ${
                     coords[hoveredIdx].point.pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'
@@ -362,7 +364,7 @@ export function EquityCurveView() {
                 >
                   {formatCurrency(coords[hoveredIdx].point.pnl, { showSign: true })}
                 </div>
-                <div className="text-slate-400">Net return:</div>
+                <div className="text-slate-400">{t('equity.net_return')}:</div>
                 <div
                   className={`font-bold text-right ${
                     coords[hoveredIdx].point.pct >= 0 ? 'text-emerald-500' : 'text-rose-500'

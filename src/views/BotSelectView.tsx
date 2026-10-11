@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useBot } from '../context/BotContext';
+import { useT } from '../i18n/LocaleContext';
 import {
   Server,
   Plus,
@@ -44,6 +45,7 @@ export function BotSelectView() {
   const [editingBot, setEditingBot] = useState<BotProfile | null>(null);
 
   const isDark = theme === 'dark';
+  const t = useT();
 
   const handlePresetChange = (presetId: string) => {
     setSelectedPreset(presetId);
@@ -65,7 +67,7 @@ export function BotSelectView() {
     if (ok) {
       setIsSelectingBot(false);
     } else {
-      setErrorMsg('Failed to connect to bot. Check that it is online and credentials are correct');
+      setErrorMsg(t('botselect.failed_connect'));
     }
   };
 
@@ -79,7 +81,7 @@ export function BotSelectView() {
         name: name.trim() || `Bot #${profiles.length + 1}`,
         apiUrl: normalizeApiUrl(apiUrl),
         username: username.trim(),
-        password: password.trim(),
+        password,
       });
 
       if (res.success) {
@@ -88,10 +90,10 @@ export function BotSelectView() {
         setPassword('');
         setIsSelectingBot(false);
       } else {
-        setErrorMsg(res.error || 'Failed to add bot. Check the connection');
+        setErrorMsg(res.error || t('botselect.failed_add'));
       }
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Add failed');
+      setErrorMsg(err?.message || t('botselect.add_failed'));
     } finally {
       setLoading(false);
     }
@@ -117,11 +119,11 @@ export function BotSelectView() {
             <div className="flex items-center gap-2 font-bold text-sm tracking-tight">
               <span>FreqUI</span>
               <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-800/60">
-                Multi-Bot Manager
+                {t('botselect.manager')}
               </span>
             </div>
             <div className="text-[11px] text-slate-500">
-              Select a strategy bot to enter, or edit an existing node
+              {t('botselect.manager_desc')}
             </div>
           </div>
         </div>
@@ -134,10 +136,10 @@ export function BotSelectView() {
                 ? 'border-slate-700 bg-[#1a233a] text-amber-400 hover:bg-[#222e4c]'
                 : 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
-            title="Toggle theme"
+            title={t('botselect.theme')}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            <span className="hidden sm:inline font-mono">{isDark ? 'Light mode' : 'Dark mode'}</span>
+            <span className="hidden sm:inline font-mono">{isDark ? t('botselect.light') : t('botselect.dark')}</span>
           </button>
         </div>
       </header>
@@ -146,9 +148,9 @@ export function BotSelectView() {
       <main className="flex-1 max-w-5xl w-full mx-auto p-6 sm:p-10">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Configured strategy bots</h1>
+            <h1 className="text-xl font-bold tracking-tight">{t('botselect.title')}</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Click any node to log in to the live FreqUI dashboard
+              {t('botselect.subtitle')}
             </p>
           </div>
 
@@ -158,7 +160,7 @@ export function BotSelectView() {
               className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Connect new bot</span>
+              <span>{t('connect.title')}</span>
             </button>
           )}
         </div>
@@ -188,7 +190,7 @@ export function BotSelectView() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Server className="w-4 h-4 text-emerald-500" />
-                <h2 className="text-sm font-bold">Connect new Freqtrade bot node</h2>
+                <h2 className="text-sm font-bold">{t('botselect.add_title')}</h2>
               </div>
               <button
                 onClick={() => setIsAdding(false)}
@@ -204,7 +206,7 @@ export function BotSelectView() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                    Bot Display Name
+                    {t('botselect.display_name')}
                   </label>
                   <select
                     value={selectedPreset}
@@ -227,7 +229,7 @@ export function BotSelectView() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Example: Production bot"
+                      placeholder={t('botselect.custom_placeholder')}
                       className={`mt-2 w-full border rounded-xl px-3 py-2 font-medium focus:outline-none focus:border-emerald-500 transition-colors ${
                         isDark
                           ? 'bg-[#1a233a] border-slate-700 text-slate-100'
@@ -241,7 +243,7 @@ export function BotSelectView() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                      API base URL
+                      {t('botselect.api_base')}
                     </label>
                     <div className="flex gap-1">
                       <button
@@ -280,7 +282,7 @@ export function BotSelectView() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                    API username
+                    {t('botselect.api_username')}
                   </label>
                   <input
                     type="text"
@@ -298,7 +300,7 @@ export function BotSelectView() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                    API password
+                    {t('botselect.api_password')}
                   </label>
                   <input
                     type="password"
@@ -323,7 +325,7 @@ export function BotSelectView() {
                     isDark ? 'border-slate-700 hover:bg-[#1a233a]' : 'border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  Cancel
+                  {t('botselect.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -331,7 +333,7 @@ export function BotSelectView() {
                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-60"
                 >
                   {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                  <span>Verify and connect</span>
+                  <span>{t('botselect.verify')}</span>
                 </button>
               </div>
             </form>
@@ -378,21 +380,21 @@ export function BotSelectView() {
                         className={`p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer ${
                           isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'
                         }`}
-                        title="Edit bot name"
+                        title={t('botselect.edit_name')}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
 
                       <button
                         onClick={() => {
-                          if (confirm(`Delete「${bot.name}」 configuration?`)) {
+                          if (confirm(`${t('botselect.delete_confirm_prefix')}「${bot.name}」?`)) {
                             deleteProfile(bot.id);
                           }
                         }}
                         className={`p-1.5 rounded-lg text-slate-400 hover:text-rose-500 transition-colors cursor-pointer ${
                           isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'
                         }`}
-                        title="Delete bot"
+                        title={t('botselect.delete_bot')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -401,19 +403,19 @@ export function BotSelectView() {
 
                   <div className="space-y-1.5 text-xs font-mono text-slate-500">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Endpoint:</span>
+                      <span className="text-slate-400">{t('botselect.endpoint')}:</span>
                       <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[160px]">
                         {isReadOnly || bot.isShared || bot.id?.startsWith('bot-url-') ? '●●●●●● [Protected]' : bot.apiUrl}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Username:</span>
+                      <span className="text-slate-400">{t('botselect.username')}:</span>
                       <span className="font-medium text-slate-700 dark:text-slate-300">
-                        {isReadOnly || bot.isShared || bot.id?.startsWith('bot-url-') ? 'Read-only guest mode' : (bot.username || '-')}
+                        {isReadOnly || bot.isShared || bot.id?.startsWith('bot-url-') ? t('botselect.protected') : (bot.username || '-')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Status:</span>
+                      <span className="text-slate-400">{t('botselect.status')}:</span>
                       <span
                         className={`text-[11px] px-1.5 py-0.2 rounded font-sans font-medium ${
                           isActive
@@ -421,7 +423,7 @@ export function BotSelectView() {
                             : 'text-slate-500 bg-slate-100 dark:bg-slate-800'
                         }`}
                       >
-                        {isActive ? 'Active' : 'Ready'}
+                        {isActive ? t('botselect.active') : t('botselect.ready')}
                       </span>
                     </div>
                   </div>
@@ -442,11 +444,11 @@ export function BotSelectView() {
                     {isConnectingThis ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Connecting...</span>
+                        <span>{t('botselect.connecting')}</span>
                       </>
                     ) : (
                       <>
-                        <span>{isActive ? 'Open dashboard' : 'Log in and enter'}</span>
+                        <span>{isActive ? t('botselect.open_dashboard') : t('botselect.login_enter')}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -468,9 +470,9 @@ export function BotSelectView() {
             <div className="p-3 rounded-full bg-slate-100 dark:bg-[#1a233a]">
               <Plus className="w-5 h-5" />
             </div>
-            <span className="font-semibold text-xs">Connect strategy node</span>
+            <span className="font-semibold text-xs">{t('botselect.quick_add')}</span>
             <span className="text-[11px] text-slate-500 text-center">
-              Monitor multiple servers, ports, and instances
+              {t('botselect.quick_add_desc')}
             </span>
           </div>
         </div>
